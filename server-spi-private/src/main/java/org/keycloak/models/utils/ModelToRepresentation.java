@@ -267,18 +267,18 @@ public class ModelToRepresentation {
         }
         rep.setGroups(groups);
 
-        String roleName = "";
+        StringBuilder roleName = new StringBuilder();
         List<ClientModel> clients = realm.getClients();
         for (ClientModel client : clients) {
             if (client.getName() != null && !client.isPublicClient() &&
                     !client.getClientId().startsWith("realm") && client.isServiceAccountsEnabled()) {
                 Set<RoleModel> mappings = user.getClientRoleMappings(client);
                 for (RoleModel roleModel : mappings) {
-                    roleName += roleModel.getName() + " ";
+                    roleName.append(roleModel.getName()).append(" ");
                 }
             }
         }
-        rep.setRoleName(roleName);
+        rep.setRoleName(roleName.toString());
         return rep;
     }
 
@@ -1022,8 +1022,14 @@ public class ModelToRepresentation {
         resource.setSort(model.getSort());
         resource.setPermission(model.getPermission());
         resource.setEnabled(model.isEnabled());
-        if(model.getParent()!=null) {
-            resource.setParent(toRepresentation(model.getParent(), resourceServer, authorization, deep));
+        Resource parentModel=model.getParent();
+        if(parentModel!=null) {
+            ResourceRepresentation parent = new ResourceRepresentation();
+            parent.setId(parentModel.getId());
+            parent.setType(parentModel.getType());
+            parent.setName(parentModel.getName());
+            parent.setDisplayName(parentModel.getDisplayName());
+            resource.setParent(parent);
         }
         resource.setParentId(model.getParentId());
         KeycloakSession keycloakSession = authorization.getKeycloakSession();
@@ -1034,7 +1040,6 @@ public class ModelToRepresentation {
             owner.setName(clientModel.getClientId());
         } else {
             UserModel userModel = keycloakSession.users().getUserById(owner.getId(), realm);
-
             if (userModel == null) {
                 throw new RuntimeException("Could not find the user [" + owner.getId() + "] who owns the Resource [" + resource.getId() + "].");
             }

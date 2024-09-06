@@ -30,6 +30,7 @@ import liquibase.sqlgenerator.SqlGeneratorChain;
 import liquibase.sqlgenerator.core.LockDatabaseChangeLogGenerator;
 import liquibase.statement.core.LockDatabaseChangeLogStatement;
 import org.jboss.logging.Logger;
+import org.keycloak.connections.jpa.updater.liquibase.KingBaseDatabase;
 
 /**
  * We use "SELECT FOR UPDATE" pessimistic locking (Same algorithm like Hibernate LockMode.PESSIMISTIC_WRITE )
@@ -69,7 +70,7 @@ public class CustomLockDatabaseChangeLogGenerator extends LockDatabaseChangeLogG
 
         String sql;
         if (database instanceof MySQLDatabase || database instanceof PostgresDatabase || database instanceof H2Database ||
-                database instanceof OracleDatabase) {
+                database instanceof OracleDatabase ||  database instanceof KingBaseDatabase ) {
             sql = sqlBase + sqlWhere + " FOR UPDATE";
         } else if (database instanceof MSSQLDatabase) {
             sql = sqlBase + " WITH (UPDLOCK, ROWLOCK)" + sqlWhere;

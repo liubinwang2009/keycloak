@@ -102,11 +102,11 @@ public class RealmCacheSession implements CacheRealmProvider {
     protected boolean transactionActive;
     protected boolean setRollbackOnly;
 
-    protected Map<String, RealmAdapter> managedRealms = new HashMap<>();
-    protected Map<String, ClientModel> managedApplications = new HashMap<>();
-    protected Map<String, ClientScopeAdapter> managedClientScopes = new HashMap<>();
-    protected Map<String, RoleAdapter> managedRoles = new HashMap<>();
-    protected Map<String, GroupAdapter> managedGroups = new HashMap<>();
+    protected WeakHashMap<String, RealmAdapter> managedRealms = new WeakHashMap<>();
+    protected WeakHashMap<String, ClientModel> managedApplications = new WeakHashMap<>();
+    protected WeakHashMap<String, ClientScopeAdapter> managedClientScopes = new WeakHashMap<>();
+    protected WeakHashMap<String, RoleAdapter> managedRoles = new WeakHashMap<>();
+    protected WeakHashMap<String, GroupAdapter> managedGroups = new WeakHashMap<>();
     protected Set<String> listInvalidations = new HashSet<>();
     protected Set<String> invalidations = new HashSet<>();
     protected Set<InvalidationEvent> invalidationEvents = new HashSet<>(); // Events to be sent across cluster
@@ -132,6 +132,7 @@ public class RealmCacheSession implements CacheRealmProvider {
 
     @Override
     public void clear() {
+        invalidationEvents.clear();
         ClusterProvider cluster = session.getProvider(ClusterProvider.class);
         cluster.notify(InfinispanCacheRealmProviderFactory.REALM_CLEAR_CACHE_EVENTS, new ClearCacheEvent(), false, ClusterProvider.DCNotify.ALL_DCS);
     }
@@ -334,11 +335,13 @@ public class RealmCacheSession implements CacheRealmProvider {
                 try {
                     if (clearAll) {
                         cache.clear();
+                        invalidationEvents.clear();
                     }
                     runInvalidations();
                     transactionActive = false;
                 } finally {
                     cache.endRevisionBatch();
+                    invalidationEvents.clear();
                 }
             }
 
@@ -350,6 +353,7 @@ public class RealmCacheSession implements CacheRealmProvider {
                     transactionActive = false;
                 } finally {
                     cache.endRevisionBatch();
+                    invalidationEvents.clear();
                 }
             }
 
@@ -772,6 +776,7 @@ public class RealmCacheSession implements CacheRealmProvider {
 
         return getRealmDelegate().removeRole(realm, role);
     }
+
 
     @Override
     public RoleModel getRoleById(String id, RealmModel realm) {

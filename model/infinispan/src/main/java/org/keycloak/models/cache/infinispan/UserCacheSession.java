@@ -94,6 +94,10 @@ public class UserCacheSession implements UserCache {
     @Override
     public void clear() {
         cache.clear();
+        invalidationEvents.clear();
+        invalidations.clear();
+        realmInvalidations.clear();
+        managedUsers.clear();
         ClusterProvider cluster = session.getProvider(ClusterProvider.class);
         cluster.notify(InfinispanUserCacheProviderFactory.USER_CLEAR_CACHE_EVENTS, new ClearCacheEvent(), true, ClusterProvider.DCNotify.ALL_DCS);
     }
@@ -137,6 +141,10 @@ public class UserCacheSession implements UserCache {
         }
 
         cache.sendInvalidationEvents(session, invalidationEvents, InfinispanUserCacheProviderFactory.USER_INVALIDATION_EVENTS);
+        cache.clear();
+        invalidationEvents.clear();
+        invalidations.clear();
+        realmInvalidations.clear();
     }
 
     private KeycloakTransaction getTransaction() {

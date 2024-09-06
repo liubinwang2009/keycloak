@@ -429,7 +429,7 @@ public class ClientResource {
     @Path("push-revocation")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public GlobalRequestResult pushRevocation() {
+    public GlobalRequestResult pushRevocation() {/**/
         auth.clients().requireConfigure(client);
 
         adminEvent.operation(OperationType.ACTION).resourcePath(session.getContext().getUri()).resource(ResourceType.CLIENT).success();

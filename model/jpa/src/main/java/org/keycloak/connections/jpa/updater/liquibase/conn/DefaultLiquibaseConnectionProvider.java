@@ -33,11 +33,7 @@ import liquibase.servicelocator.ServiceLocator;
 import liquibase.sqlgenerator.SqlGeneratorFactory;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
-import org.keycloak.connections.jpa.updater.liquibase.LiquibaseJpaUpdaterProvider;
-import org.keycloak.connections.jpa.updater.liquibase.PostgresPlusDatabase;
-import org.keycloak.connections.jpa.updater.liquibase.MySQL8VarcharType;
-import org.keycloak.connections.jpa.updater.liquibase.UpdatedMariaDBDatabase;
-import org.keycloak.connections.jpa.updater.liquibase.UpdatedMySqlDatabase;
+import org.keycloak.connections.jpa.updater.liquibase.*;
 import org.keycloak.connections.jpa.updater.liquibase.lock.CustomInsertLockRecordGenerator;
 import org.keycloak.connections.jpa.updater.liquibase.lock.CustomLockDatabaseChangeLogGenerator;
 import org.keycloak.connections.jpa.updater.liquibase.lock.DummyLockService;
@@ -100,6 +96,8 @@ public class DefaultLiquibaseConnectionProvider implements LiquibaseConnectionPr
         // Adding newer version of MySQL/MariaDB support to liquibase
         DatabaseFactory.getInstance().register(new UpdatedMySqlDatabase());
         DatabaseFactory.getInstance().register(new UpdatedMariaDBDatabase());
+        //add kingbase
+        DatabaseFactory.getInstance().register(new KingBaseDatabase());
 
         // Adding CustomVarcharType for MySQL 8 and newer
         DataTypeFactory.getInstance().register(MySQL8VarcharType.class);

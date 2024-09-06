@@ -169,6 +169,8 @@ public class InfinispanNotificationsManager {
             }
 
         }, 10, 10);
+            workRemoteCache.clear();
+
 
         }
     }

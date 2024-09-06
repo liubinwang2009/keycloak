@@ -16,15 +16,7 @@
  */
 package org.keycloak.models.cache.infinispan.authorization;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -90,11 +82,11 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
     protected boolean transactionActive;
     protected boolean setRollbackOnly;
 
-    protected Map<String, ResourceServerAdapter> managedResourceServers = new HashMap<>();
-    protected Map<String, ScopeAdapter> managedScopes = new HashMap<>();
-    protected Map<String, ResourceAdapter> managedResources = new HashMap<>();
-    protected Map<String, PolicyAdapter> managedPolicies = new HashMap<>();
-    protected Map<String, PermissionTicketAdapter> managedPermissionTickets = new HashMap<>();
+    protected WeakHashMap<String, ResourceServerAdapter> managedResourceServers = new WeakHashMap<>();
+    protected WeakHashMap<String, ScopeAdapter> managedScopes = new WeakHashMap<>();
+    protected WeakHashMap<String, ResourceAdapter> managedResources = new WeakHashMap<>();
+    protected WeakHashMap<String, PolicyAdapter> managedPolicies = new WeakHashMap<>();
+    protected WeakHashMap<String, PermissionTicketAdapter> managedPermissionTickets = new WeakHashMap<>();
     protected Set<String> invalidations = new HashSet<>();
     protected Set<InvalidationEvent> invalidationEvents = new HashSet<>(); // Events to be sent across cluster
 
@@ -210,6 +202,7 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
                     transactionActive = false;
                 } finally {
                     cache.endRevisionBatch();
+                    invalidationEvents.clear();
                 }
             }
 
