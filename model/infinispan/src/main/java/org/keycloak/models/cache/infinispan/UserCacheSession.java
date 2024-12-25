@@ -95,9 +95,6 @@ public class UserCacheSession implements UserCache {
     public void clear() {
         cache.clear();
         invalidationEvents.clear();
-        invalidations.clear();
-        realmInvalidations.clear();
-        managedUsers.clear();
         ClusterProvider cluster = session.getProvider(ClusterProvider.class);
         cluster.notify(InfinispanUserCacheProviderFactory.USER_CLEAR_CACHE_EVENTS, new ClearCacheEvent(), true, ClusterProvider.DCNotify.ALL_DCS);
     }

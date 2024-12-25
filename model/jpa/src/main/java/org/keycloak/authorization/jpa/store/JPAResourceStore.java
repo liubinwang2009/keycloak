@@ -105,9 +105,15 @@ public class JPAResourceStore implements ResourceStore {
     public void delete(String id) {
         ResourceEntity resource = entityManager.getReference(ResourceEntity.class, id);
         if (resource == null) return;
-
+        List<ResourceEntity> children=new ArrayList<>();
+        String resourceServerId=resource.getResourceServer().getId();
+        this.findChildrenRecursively(resourceServerId,resource.getId(),children::add);
+        for(ResourceEntity resourceEntity:children){
+            this.entityManager.remove(resourceEntity);
+        }
         resource.getScopes().clear();
         this.entityManager.remove(resource);
+
     }
 
     @Override
@@ -418,16 +424,37 @@ public class JPAResourceStore implements ResourceStore {
     @Override
     public void findByParent(String resourceServerId, String parent, Consumer<Resource> consumer) {
         ResourceEntity resourceEntity = entityManager.find(ResourceEntity.class, parent);
-        TypedQuery<String> query = entityManager.createNamedQuery("getResourceIdsByParent", String.class);
+        TypedQuery<ResourceEntity> query = entityManager.createNamedQuery("getResourceByParent", ResourceEntity.class);
 
         query.setFlushMode(FlushModeType.COMMIT);
         query.setParameter("parent", resourceEntity);
         query.setParameter("ownerId", resourceServerId);
         query.setParameter("serverId", resourceServerId);
+        List<ResourceEntity> resultList = query.getResultList();
+        for (ResourceEntity reid : resultList) {
+            Resource resource = findById(reid.getId(), resourceServerId);
+            consumer.accept(resource);
+        }
+    }
 
-        query.getResultList().stream()
-                .map(id -> findById(id, resourceServerId))
-                .forEach(consumer);
+
+    private  void  findChildrenByParent(String resourceServerId, String parent, Consumer<ResourceEntity> consumer){
+        ResourceEntity resourceEntity = entityManager.find(ResourceEntity.class, parent);
+        TypedQuery<ResourceEntity> query = entityManager.createNamedQuery("getResourceByParent", ResourceEntity.class);
+
+        query.setFlushMode(FlushModeType.COMMIT);
+        query.setParameter("parent", resourceEntity);
+        query.setParameter("ownerId", resourceServerId);
+        query.setParameter("serverId", resourceServerId);
+        List<ResourceEntity> resultList = query.getResultList();
+        resultList.forEach(consumer);
+    }
+
+    private void findChildrenRecursively(String resourceServerId, String parentId, Consumer<ResourceEntity> consumer) {
+        findChildrenByParent(resourceServerId, parentId, resource -> {
+            consumer.accept(resource);
+            findChildrenRecursively(resourceServerId, resource.getId(), consumer);
+        });
     }
 
     @Override

@@ -151,6 +151,8 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
     public void close() {
         if (delegate != null) {
             delegate.close();
+            cache.clear();
+            invalidationEvents.clear();
         }
     }
 
@@ -202,7 +204,6 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
                     transactionActive = false;
                 } finally {
                     cache.endRevisionBatch();
-                    invalidationEvents.clear();
                 }
             }
 
