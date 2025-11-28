@@ -156,7 +156,11 @@ public class GroupAdapter implements GroupModel, JpaModel<GroupEntity> {
         if (subGroup.getId().equals(getId())) {
             return;
         }
+        GroupModel parent= subGroup.getParent();
         subGroup.setParent(null);
+        if(parent.getSubGroups().isEmpty()){
+            parent.setHasChild(false);
+        }
     }
 
     @Override

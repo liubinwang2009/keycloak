@@ -102,11 +102,11 @@ public class RealmCacheSession implements CacheRealmProvider {
     protected boolean transactionActive;
     protected boolean setRollbackOnly;
 
-    protected WeakHashMap<String, RealmAdapter> managedRealms = new WeakHashMap<>();
-    protected WeakHashMap<String, ClientModel> managedApplications = new WeakHashMap<>();
-    protected WeakHashMap<String, ClientScopeAdapter> managedClientScopes = new WeakHashMap<>();
-    protected WeakHashMap<String, RoleAdapter> managedRoles = new WeakHashMap<>();
-    protected WeakHashMap<String, GroupAdapter> managedGroups = new WeakHashMap<>();
+    protected Map<String, RealmAdapter> managedRealms = new HashMap<>();
+    protected Map<String, ClientModel> managedApplications = new HashMap<>();
+    protected Map<String, ClientScopeAdapter> managedClientScopes = new HashMap<>();
+    protected Map<String, RoleAdapter> managedRoles = new HashMap<>();
+    protected Map<String, GroupAdapter> managedGroups = new HashMap<>();
     protected Set<String> listInvalidations = new HashSet<>();
     protected Set<String> invalidations = new HashSet<>();
     protected Set<InvalidationEvent> invalidationEvents = new HashSet<>(); // Events to be sent across cluster
@@ -132,10 +132,8 @@ public class RealmCacheSession implements CacheRealmProvider {
 
     @Override
     public void clear() {
-        cache.clear();;
-        invalidationEvents.clear();
         ClusterProvider cluster = session.getProvider(ClusterProvider.class);
-        cluster.notify(InfinispanCacheRealmProviderFactory.REALM_CLEAR_CACHE_EVENTS, new ClearCacheEvent(), false, ClusterProvider.DCNotify.ALL_DCS);
+        cluster.notify(InfinispanCacheRealmProviderFactory.REALM_CLEAR_CACHE_EVENTS, ClearCacheEvent.getInstance(), false, ClusterProvider.DCNotify.ALL_DCS);
     }
 
     @Override
@@ -336,13 +334,11 @@ public class RealmCacheSession implements CacheRealmProvider {
                 try {
                     if (clearAll) {
                         cache.clear();
-                        invalidationEvents.clear();
                     }
                     runInvalidations();
                     transactionActive = false;
                 } finally {
                     cache.endRevisionBatch();
-                    invalidationEvents.clear();
                 }
             }
 
@@ -354,7 +350,6 @@ public class RealmCacheSession implements CacheRealmProvider {
                     transactionActive = false;
                 } finally {
                     cache.endRevisionBatch();
-                    invalidationEvents.clear();
                 }
             }
 
@@ -457,7 +452,7 @@ public class RealmCacheSession implements CacheRealmProvider {
     static String getRealmByNameCacheKey(String name) {
         return "realm.query.by.name." + name;
     }
-    
+
     @Override
     public List<RealmModel> getRealmsWithProviderType(Class<?> type) {
         // Retrieve realms from backend
@@ -571,15 +566,15 @@ public class RealmCacheSession implements CacheRealmProvider {
         for (RoleModel role : client.getRoles()) {
             roleRemovalInvalidations(role.getId(), role.getName(), client.getId());
         }
-        
+
         if (client.isServiceAccountsEnabled()) {
             UserModel serviceAccount = session.users().getServiceAccount(client);
-            
+
             if (serviceAccount != null) {
                 session.users().removeUser(realm, serviceAccount);
             }
         }
-        
+
         return getRealmDelegate().removeClient(id, realm);
     }
 
@@ -686,7 +681,7 @@ public class RealmCacheSession implements CacheRealmProvider {
 
     @Override
     public Set<RoleModel> searchForClientRoles(RealmModel realm, ClientModel client, String search, Integer first,
-            Integer max) {
+                                               Integer max) {
         return getRealmDelegate().searchForClientRoles(realm, client, search, first, max);
     }
 
@@ -777,7 +772,6 @@ public class RealmCacheSession implements CacheRealmProvider {
 
         return getRealmDelegate().removeRole(realm, role);
     }
-
 
     @Override
     public RoleModel getRoleById(String id, RealmModel realm) {
@@ -896,10 +890,10 @@ public class RealmCacheSession implements CacheRealmProvider {
     public Long getGroupsCountByNameContaining(RealmModel realm, String search) {
         return getRealmDelegate().getGroupsCountByNameContaining(realm, search);
     }
-    
+
     @Override
     public List<GroupModel> getGroupsByRole(RealmModel realm, RoleModel role, int firstResult, int maxResults) {
-    	return getRealmDelegate().getGroupsByRole(realm, role, firstResult, maxResults);
+        return getRealmDelegate().getGroupsByRole(realm, role, firstResult, maxResults);
     }
 
     @Override

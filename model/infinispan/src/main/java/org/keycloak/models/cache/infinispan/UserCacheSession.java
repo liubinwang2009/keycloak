@@ -94,9 +94,8 @@ public class UserCacheSession implements UserCache {
     @Override
     public void clear() {
         cache.clear();
-        invalidationEvents.clear();
         ClusterProvider cluster = session.getProvider(ClusterProvider.class);
-        cluster.notify(InfinispanUserCacheProviderFactory.USER_CLEAR_CACHE_EVENTS, new ClearCacheEvent(), true, ClusterProvider.DCNotify.ALL_DCS);
+        cluster.notify(InfinispanUserCacheProviderFactory.USER_CLEAR_CACHE_EVENTS, ClearCacheEvent.getInstance(), true, ClusterProvider.DCNotify.ALL_DCS);
     }
 
     public UserProvider getDelegate() {
@@ -138,10 +137,6 @@ public class UserCacheSession implements UserCache {
         }
 
         cache.sendInvalidationEvents(session, invalidationEvents, InfinispanUserCacheProviderFactory.USER_INVALIDATION_EVENTS);
-        cache.clear();
-        invalidationEvents.clear();
-        invalidations.clear();
-        realmInvalidations.clear();
     }
 
     private KeycloakTransaction getTransaction() {
@@ -202,7 +197,7 @@ public class UserCacheSession implements UserCache {
         if (cached != null && !cached.getRealm().equals(realm.getId())) {
             cached = null;
         }
-        
+
         UserModel adapter = null;
         if (cached == null) {
             logger.trace("not cached");

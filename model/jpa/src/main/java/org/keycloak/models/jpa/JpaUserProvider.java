@@ -17,6 +17,7 @@
 
 package org.keycloak.models.jpa;
 
+import org.jboss.logging.Logger;
 import org.keycloak.authorization.jpa.entities.ResourceEntity;
 import org.keycloak.common.util.Time;
 import org.keycloak.component.ComponentModel;
@@ -68,6 +69,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.persistence.LockModeType;
+import javax.transaction.Transactional;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -76,6 +78,7 @@ import javax.persistence.LockModeType;
 @SuppressWarnings("JpaQueryApiInspection")
 public class JpaUserProvider implements UserProvider, UserCredentialStore {
 
+    protected static final Logger logger = Logger.getLogger(JpaUserProvider.class);
     private static final String EMAIL = "email";
     private static final String USERNAME = "username";
     private static final String FIRST_NAME = "firstName";
@@ -1125,13 +1128,21 @@ public class JpaUserProvider implements UserProvider, UserCredentialStore {
 
     @Override
     public void updateLoginTimestamp(UserModel userModel) {
-//        UserEntity entity = em.find(UserEntity.class, userModel.getId());
-//        if (entity == null) return;
-//        long time = Time.currentTimeMillis();
-//        if(time-entity.getLoginTimestamp()>5000) {
-//            entity.setLoginTimestamp(time);
-//            em.persist(entity);
-//        }
+        if (userModel == null || userModel.getId() == null) {
+            return;
+        }
+        try {
+            UserEntity entity = em.find(UserEntity.class, userModel.getId());
+            if (entity == null) return;
+            long time = Time.currentTimeMillis();
+            if(time-entity.getLoginTimestamp()>5000) {
+                entity.setLoginTimestamp(time);
+                em.merge(entity);
+            }
+        } catch (Exception e) {
+            // 记录异常日志，避免影响主流程
+            logger.warn("Failed to update login timestamp for user: {}", userModel.getId(), e);
+        }
     }
 
     @Override

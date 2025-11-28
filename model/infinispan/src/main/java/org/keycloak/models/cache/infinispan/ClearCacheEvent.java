@@ -23,4 +23,21 @@ import org.keycloak.cluster.ClusterEvent;
  * @version $Revision: 1 $
  */
 public class ClearCacheEvent implements ClusterEvent {
+    private static final ClearCacheEvent INSTANCE = new ClearCacheEvent();
+
+    private ClearCacheEvent() {}
+
+    public static ClearCacheEvent getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof ClearCacheEvent;
+    }
+
+    @Override
+    public int hashCode() {
+        return 1;
+    }
 }

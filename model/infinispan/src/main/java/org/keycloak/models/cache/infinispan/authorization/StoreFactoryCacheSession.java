@@ -16,7 +16,15 @@
  */
 package org.keycloak.models.cache.infinispan.authorization;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -82,11 +90,11 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
     protected boolean transactionActive;
     protected boolean setRollbackOnly;
 
-    protected WeakHashMap<String, ResourceServerAdapter> managedResourceServers = new WeakHashMap<>();
-    protected WeakHashMap<String, ScopeAdapter> managedScopes = new WeakHashMap<>();
-    protected WeakHashMap<String, ResourceAdapter> managedResources = new WeakHashMap<>();
-    protected WeakHashMap<String, PolicyAdapter> managedPolicies = new WeakHashMap<>();
-    protected WeakHashMap<String, PermissionTicketAdapter> managedPermissionTickets = new WeakHashMap<>();
+    protected Map<String, ResourceServerAdapter> managedResourceServers = new HashMap<>();
+    protected Map<String, ScopeAdapter> managedScopes = new HashMap<>();
+    protected Map<String, ResourceAdapter> managedResources = new HashMap<>();
+    protected Map<String, PolicyAdapter> managedPolicies = new HashMap<>();
+    protected Map<String, PermissionTicketAdapter> managedPermissionTickets = new HashMap<>();
     protected Set<String> invalidations = new HashSet<>();
     protected Set<InvalidationEvent> invalidationEvents = new HashSet<>(); // Events to be sent across cluster
 
@@ -151,8 +159,6 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
     public void close() {
         if (delegate != null) {
             delegate.close();
-            cache.clear();
-            invalidationEvents.clear();
         }
     }
 
@@ -483,7 +489,7 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
                 return managedResourceServers.get(id);
             }
             ResourceServerAdapter adapter = new ResourceServerAdapter(cached, StoreFactoryCacheSession.this);
-             managedResourceServers.put(id, adapter);
+            managedResourceServers.put(id, adapter);
             return adapter;
         }
     }
@@ -737,10 +743,10 @@ public class StoreFactoryCacheSession implements CachedStoreFactoryProvider {
 
         @Override
         public List<Resource> findByType(String type, String resourceServerId) {
-             if (type == null) return Collections.emptyList();
-             String cacheKey = getResourceByTypeCacheKey(type, resourceServerId);
-             return cacheQuery(cacheKey, ResourceListQuery.class, () -> getResourceStoreDelegate().findByType(type, resourceServerId),
-                     (revision, resources) -> new ResourceListQuery(revision, cacheKey, resources.stream().map(resource -> resource.getId()).collect(Collectors.toSet()), resourceServerId), resourceServerId);
+            if (type == null) return Collections.emptyList();
+            String cacheKey = getResourceByTypeCacheKey(type, resourceServerId);
+            return cacheQuery(cacheKey, ResourceListQuery.class, () -> getResourceStoreDelegate().findByType(type, resourceServerId),
+                    (revision, resources) -> new ResourceListQuery(revision, cacheKey, resources.stream().map(resource -> resource.getId()).collect(Collectors.toSet()), resourceServerId), resourceServerId);
         }
 
         @Override
